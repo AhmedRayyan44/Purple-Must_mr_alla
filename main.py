@@ -63,7 +63,7 @@ def send_product_data_to_telegram():
             product_name, product_status, image_url = extract_product_details(product_link)
             if product_name and product_name == "بيربل مست" and product_status == "سيتم توفيرها في المخزون قريباً":
                 bot_token = "7288675008:AAG_FR-q-q68WbJmAgJU-6Mc36nS5qK299w"
-                chat_id = "-1002210486424"
+                chat_id = "-1002239597458"
                 telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
 
                 message_text = f"Product Name: {product_name}\nProduct Status: {product_status}"
