@@ -86,7 +86,7 @@ def main():
 
             for product_link in product_links:
                 product_name, product_status, image_url = extract_product_details(product_link)
-                if product_name and product_name == "إيدجي منت":
+                if product_name and product_name == "بيربل مست":
                     if product_status == "متاح":
                         if product_status != last_sent_status:
                             last_sent_status = product_status
