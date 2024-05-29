@@ -74,15 +74,17 @@ def send_product_data_to_telegram():
 
         product_data_list = []
         for product_link in product_links:
-            product_info = {"url": product_link}
-            product_name, product_status, image_url = extract_product_details(product_link)
-            if product_name and product_status:
-                product_info.update({"name": product_name, "status": product_status, "image_url": image_url})
-                product_data_list.append(product_info)
-                print(f"Product Name: {product_name}")
-                print(f"Product Status: {product_status}")
-                print(f"Image URL: {image_url}")
-                print("-" * 50)
+            if product_link == "https://www.dzrt.com/ar/purple-mist.html" :
+                
+                product_info = {"url": product_link}
+                product_name, product_status, image_url = extract_product_details(product_link)
+                if product_name and product_status:
+                    product_info.update({"name": product_name, "status": product_status, "image_url": image_url})
+                    product_data_list.append(product_info)
+                    print(f"Product Name: {product_name}")
+                    print(f"Product Status: {product_status}")
+                    print(f"Image URL: {image_url}")
+                    print("-" * 50)
 
         bot_token = "7288675008:AAG_FR-q-q68WbJmAgJU-6Mc36nS5qK299w"
         chat_id = "-1002239597458"
