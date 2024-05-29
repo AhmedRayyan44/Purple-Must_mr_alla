@@ -3,9 +3,21 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
-# Variables to track the last sent status and consecutive sends
-last_sent_status = None
-consecutive_sends = 0
+# Global list to store product names that are successfully sent
+sent_products = []
+
+# Dictionary to store the time each product was last sent
+product_send_times = {}
+
+# List of products that should not be notified
+excluded_products = [
+    "سبايسي زيست", "إيدجي منت", "منت فيوجن", "ايسي راش", "جاردن منت", "سي سايد فروست", "هايلاند بيريز"       
+] 
+
+# Replace with actual product names to exclude
+
+# Variable to store the time of the last clearing of the sent_products list
+last_clear_time = time.time()
 
 # Function to fetch URL content with retries
 def fetch_url_with_retry(url, max_retries=7, delay=1):
@@ -47,62 +59,67 @@ def extract_product_details(product_url):
 
         return product_name, product_status, image_url
     except Exception as e:
-        print(f"Error extracting product details for {product_url}: {str(e)}")
+        print(f"An error occurred while extracting product details for {product_url}: {str(e)}")
         return None, None, None
 
 # Function to send product data to Telegram
-def send_product_data_to_telegram(product_name, product_status, image_url, product_link):
-    bot_token = "7288675008:AAG_FR-q-q68WbJmAgJU-6Mc36nS5qK299w"
-    chat_id = "-1002239597458"
-    telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
+def send_product_data_to_telegram():
+    global sent_products, last_clear_time, product_send_times
 
-    message_text = f"Product Name: {product_name}\nProduct Status: {product_status}"
-    reply_markup = {
-        "inline_keyboard": [[{"text": "View Product", "url": product_link}]]
-    }
-    params = {
-        "chat_id": chat_id,
-        "photo": image_url,
-        "caption": message_text,
-        "reply_markup": json.dumps(reply_markup)
-    }
-    response = requests.post(telegram_api_url, params=params)
+    url = "https://www.dzrt.com/ar/our-products.html"
+    html_content = fetch_url_with_retry(url)
+    if html_content:
+        soup = BeautifulSoup(html_content, "html.parser")
+        product_links = [a["href"] for a in soup.find_all("a", class_="product-item-link")]
 
-    if response.status_code == 200:
-        print(f"Product data sent successfully for {product_name}")
-    else:
-        print(f"Failed to send product data for {product_name}. Status code: {response.status_code}")
+        product_data_list = []
+        for product_link in product_links:
+            product_info = {"url": product_link}
+            product_name, product_status, image_url = extract_product_details(product_link)
+            if product_name and product_status:
+                product_info.update({"name": product_name, "status": product_status, "image_url": image_url})
+                product_data_list.append(product_info)
+                print(f"Product Name: {product_name}")
+                print(f"Product Status: {product_status}")
+                print(f"Image URL: {image_url}")
+                print("-" * 50)
 
-# Main function to run the code
-def main():
-    global last_sent_status, consecutive_sends
+        bot_token = "7288675008:AAG_FR-q-q68WbJmAgJU-6Mc36nS5qK299w"
+        chat_id = "-1002239597458"
+        telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
 
-    while True:
-        url = "https://www.dzrt.com/ar/our-products.html"
-        html_content = fetch_url_with_retry(url)
-        if html_content:
-            soup = BeautifulSoup(html_content, "html.parser")
-            product_links = [a["href"] for a in soup.find_all("a", class_="product-item-link")]
+        for product_data in product_data_list:
+            product_name = product_data.get("name", "")
+            product_status = product_data.get("status", "")
+            product_url = product_data.get("url", "")
+            image_url = product_data.get("image_url", "")
 
-            for product_link in product_links:
-                product_name, product_status, image_url = extract_product_details(product_link)
-                if product_name and product_name == "بيربل مست":
-                    if product_status == "متاح":
-                        if product_status != last_sent_status:
-                            last_sent_status = product_status
-                            consecutive_sends = 0
+            if product_status == "متوفر" and product_name not in excluded_products:
+                if product_name not in sent_products:
+                    message_text = f"Product Name: {product_name}\nProduct Status: {product_status}"
+                    reply_markup = {
+                        "inline_keyboard": [[{"text": "View Product", "url": product_url}]]
+                    }
+                    params = {
+                        "chat_id": chat_id,
+                        "photo": image_url,
+                        "caption": message_text,
+                        "reply_markup": json.dumps(reply_markup)
+                    }
+                    response = requests.post(telegram_api_url, params=params)
 
-                        if consecutive_sends < 3:
-                            send_product_data_to_telegram(product_name, product_status, image_url, product_link)
-                            consecutive_sends += 1
-                        else:
-                            print(f"Sent {product_name} details 3 times. Waiting for 20 minutes.")
-                            consecutive_sends = 0
-                            time.sleep(1200)  # Wait for 20 minutes before continuing
-                    break
+                    if response.status_code == 200:
+                        print(f"Product data sent successfully for {product_name}")
+                        sent_products.append(product_name)
+                        product_send_times[product_name] = time.time()
+                    else:
+                        print(f"Failed to send product data for {product_name}. Status code: {response.status_code}")
 
-        # Wait for 20 seconds before checking again
-        time.sleep(20)
+        if time.time() - last_clear_time >= 60:
+            sent_products = []
+            last_clear_time = time.time()
 
-if __name__ == "__main__":
-    main()
+# Main loop to run the code every minute
+while True:
+    send_product_data_to_telegram()
+    time.sleep(20)
