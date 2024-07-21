@@ -71,7 +71,7 @@ def extract_product_details(product_url):
 # Function to send product data to Telegram
 def send_product_data_to_telegram(product_name, product_status, image_url, product_link):
     bot_token = "7288675008:AAEuvumaPpNNbnHMJfVEPYTBVKxFjLPJwl8"
-    chat_id = "-1002239597458"
+    chat_id = "-1002210486424"
     telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
        # Update the message text with emojis, user-friendly language, and bold text
     if product_status == "متوفر":
@@ -107,12 +107,12 @@ def send_product_data_to_telegram(product_name, product_status, image_url, produ
 # Main function to run the code
 def main():
     global last_sent_status
-    url = "https://www.dzrt.com/ar/purple-mist.html"
+    url = "https://www.dzrt.com/ar/spicy-zest.html"
     while True:
         html_content = fetch_url_with_retry(url)
         if html_content:
             product_name, product_status, image_url = extract_product_details(url)
-            if product_name and product_name == "بيربل مست":
+            if product_name and product_name == "سبايسي زيست":
                 if product_status in ["متوفر", "سيتم توفيرها في المخزون قريباً"]:
                     if product_status != last_sent_status:
                         send_product_data_to_telegram(product_name, product_status, image_url, url)
