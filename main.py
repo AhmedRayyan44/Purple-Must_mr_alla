@@ -112,7 +112,7 @@ def main():
         html_content = fetch_url_with_retry(url)
         if html_content:
             product_name, product_status, image_url = extract_product_details(url)
-            if product_name and product_name == "سبايسي زيست":
+            if product_name and product_name == "بيربل مست":
                 if product_status in ["متوفر", "سيتم توفيرها في المخزون قريباً"]:
                     if product_status != last_sent_status:
                         send_product_data_to_telegram(product_name, product_status, image_url, url)
